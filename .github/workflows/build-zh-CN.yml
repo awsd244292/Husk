@@ -15,7 +15,9 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          brew install meson ninja pkg-config xcodegen qemu-img e2fsprogs
+          brew install meson ninja pkg-config xcodegen qemu
+          # e2fsprogs 提供 debugfs，仅构建 Android 系统镜像时需要，失败不影响 IPA
+          brew install e2fsprogs || true
           rustup target add aarch64-apple-ios
 
       - name: Build Husk IPA
