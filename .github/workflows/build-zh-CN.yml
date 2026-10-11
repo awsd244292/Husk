@@ -4,33 +4,61 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master]
+    paths-ignore: ["**.md", "docs/**"]
 
 jobs:
   build:
-    runs-on: macos-14
-    timeout-minutes: 330
+    runs-on: macos-26
+    timeout-minutes: 300
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install build dependencies
+      - name: Select newest Xcode
         run: |
-          brew install meson ninja pkg-config xcodegen qemu
-          # e2fsprogs 提供 debugfs，仅构建 Android 系统镜像时需要，失败不影响 IPA
-          brew install e2fsprogs || true
-          rustup target add aarch64-apple-ios
+          XC="$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          echo "Using $XC"
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
 
-      - name: Build Husk IPA
-        run: ./scripts/ci_build.sh
+      - name: Host tools
+        run: |
+          brew install meson ninja pkg-config xcodegen qemu bison flex gettext || true
+          # virglrenderer's meson build imports yaml from Homebrew's python3.
+          /opt/homebrew/bin/python3 -m pip install --break-system-packages --user pyyaml mako packaging
+          echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
+          echo "$(brew --prefix flex)/bin" >> "$GITHUB_PATH"
+          # build_gpu_ios.sh calls meson and ninja by their Apple-silicon Homebrew path.
+          ls /opt/homebrew/bin/meson /opt/homebrew/bin/ninja
 
-      - name: Show build outputs
-        run: ls -lh build/
+      # ANGLE 与依赖栈占了大部分构建时间，且只在构建脚本或版本锁变化时才会变，因此缓存。
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            third_party/sources
+            third_party/gpu
+            build/ios-arm64/sysroot
+          key: deps-${{ runner.os }}-${{ hashFiles('scripts/sources.sh', 'scripts/build_ios.sh', 'scripts/build_angle_ios.sh', 'scripts/build_gpu_ios.sh', 'patches/libslirp-v4.9.1.patch', 'patches/pixman-0.38.0.patch', 'patches/husk-epoxy-ios-egl-path.patch') }}
 
-      - name: Upload IPA artifacts
+      - name: Build
+        run: ./scripts/ci_build.sh "$PWD/build/Husk.ipa"
+
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: Husk-zh-CN-ipa
           path: |
-            build/*.ipa
-            build/*.tipa
+            build/Husk.ipa
+            build/Husk.tipa
           if-no-files-found: error
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build/logs
+            /tmp/husk_ipa/build.log
+          if-no-files-found: ignore
