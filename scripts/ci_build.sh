@@ -54,4 +54,5 @@ step "on-device pairing (Rust)"
 step "app + IPA"
 mkdir -p "$(dirname "$OUT")"
 ./scripts/package_ipa.sh "$OUT"
-./scripts/package_ipa.sh --trollstore "${OUT%.ipa}.tipa"
+# 本次交付只要 IPA，不额外打包 TrollStore 用的 .tipa
+# ./scripts/package_ipa.sh --trollstore "${OUT%.ipa}.tipa"

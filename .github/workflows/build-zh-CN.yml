@@ -10,6 +10,8 @@ jobs:
   build:
     runs-on: macos-26
     timeout-minutes: 300
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -51,10 +53,26 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Husk-zh-CN-ipa
-          path: |
-            build/Husk.ipa
-            build/Husk.tipa
+          path: build/Husk.ipa
           if-no-files-found: error
+
+      # 同时发一个 Release：release 资源可以用镜像加速下载，
+      # artifacts 走 API 直连在部分地区很慢。
+      - name: Publish IPA to a release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="zh-cn-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" build/Husk.ipa \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Husk 简体中文版 $TAG" \
+            --notes "自动化构建的 Husk 简体中文版 IPA（界面 UI 文案已汉化）。
+
+          源码提交：${GITHUB_SHA}
+          构建编号：${GITHUB_RUN_NUMBER}
+
+          安装方式：用 SideStore / AltStore 侧载，或用 TrollStore 安装。" \
+            --latest
 
       - name: Upload logs on failure
         if: failure()
