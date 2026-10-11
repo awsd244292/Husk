@@ -16,25 +16,25 @@ enum WhatsNew {
     static let version = "1.0.1"
     static let items: [Item] = [
         Item(symbol: "bag.fill", title: "Google Play",
-             detail: "Get games from the Store tab. Play Store downloads, with their split APKs and asset packs, run in the Translation Layer."),
+             detail: "在“商店”标签页获取游戏。Play 商店下载的内容（含分包 APK 和资源包）可在转译层中运行。"),
         Item(symbol: "checkmark.seal.fill", title: "Google Play services",
-             detail: "Games see Play services as present and signed out, so they stop asking for it and carry on."),
-        Item(symbol: "arrow.up.doc.fill", title: "Save backups",
-             detail: "Back up a game's saves to a .zip from its page, and restore them later or on another device."),
-        Item(symbol: "exclamationmark.bubble.fill", title: "Crash reports",
-             detail: "When a game takes Husk down, the next launch says what happened and gives you a report to share."),
-        Item(symbol: "checkmark.circle.fill", title: "Know what works",
-             detail: "The library marks each game with how it did last time: it plays, it crashed, or it did not start."),
-        Item(symbol: "gamecontroller.fill", title: "Godot games",
-             detail: "Games made with Godot 3 and 4 now run in the Translation Layer."),
-        Item(symbol: "slider.horizontal.below.square.and.square.filled", title: "Your own controls",
-             detail: "Move, resize and hide the on-screen controller's buttons, for each game."),
-        Item(symbol: "keyboard.fill", title: "Typing in Minecraft",
-             detail: "Chat, sign and world-name fields bring up the keyboard."),
-        Item(symbol: "arrow.left.arrow.right", title: "Switching games",
-             detail: "Close Husk to play another game, and it starts by itself when Husk opens."),
+             detail: "游戏会检测到 Play 服务已存在且未登录，因此不再反复索要并继续运行。"),
+        Item(symbol: "arrow.up.doc.fill", title: "存档备份",
+             detail: "从游戏页面将存档备份为 .zip，之后可恢复或在其他设备上使用。"),
+        Item(symbol: "exclamationmark.bubble.fill", title: "崩溃报告",
+             detail: "当游戏导致 Husk 崩溃时，下次启动会说明原因，并提供可分享的报告。"),
+        Item(symbol: "checkmark.circle.fill", title: "了解哪些能玩",
+             detail: "资料库会标注每个游戏上次的表现：可玩、崩溃或未能启动。"),
+        Item(symbol: "gamecontroller.fill", title: "Godot 游戏",
+             detail: "使用 Godot 3 和 4 制作的游戏现可在转译层中运行。"),
+        Item(symbol: "slider.horizontal.below.square.and.square.filled", title: "自定义控制",
+             detail: "为每个游戏移动、调整大小或隐藏屏幕手柄的按钮。"),
+        Item(symbol: "keyboard.fill", title: "在 Minecraft 中输入",
+             detail: "聊天、告示牌和世界名称输入框会调出键盘。"),
+        Item(symbol: "arrow.left.arrow.right", title: "切换游戏",
+             detail: "关闭 Husk 去玩另一个游戏，Husk 打开时它会自行启动。"),
         Item(symbol: "puzzlepiece.extension.fill", title: "Geode",
-             detail: "Mods for Geometry Dash, Geode 5 included, turned on from the game's settings."),
+             detail: "Geometry Dash 的模组（含 Geode 5）可在游戏设置中开启。"),
     ]
 
     private static let seenKey = "husk.whatsNew.seen"
@@ -58,8 +58,8 @@ struct WhatsNewSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("What's New in Husk \(WhatsNew.version)").font(.largeTitle.weight(.bold))
-                        Text("The first full release.").foregroundStyle(.secondary)
+                        Text("Husk \(WhatsNew.version) 的新功能").font(.largeTitle.weight(.bold))
+                        Text("首个正式版本。").foregroundStyle(.secondary)
                     }
                     .padding(.top, 36)
                     ForEach(WhatsNew.items) { item in
@@ -80,7 +80,7 @@ struct WhatsNewSheet: View {
                 .padding(.bottom, 20)
             }
             Button(action: done) {
-                Text("Continue").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 8)
+                Text("继续").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 8)
             }
             .buttonStyle(.borderedProminent)
             .padding(.horizontal, 28)

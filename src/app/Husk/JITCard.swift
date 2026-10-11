@@ -44,8 +44,8 @@ struct JITCard: View {
                     .background(Color.accentColor.opacity(0.16), in: Circle())
                 Button { jit.showSetup = true } label: {
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("JIT is off").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                        Text(jit.busy ? (jit.status ?? "Turning on JIT…") : "Games need it. \(offered == .builtIn ? "StikJIT" : offered.title) turns it on.")
+                        Text("JIT 已关闭").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                        Text(jit.busy ? (jit.status ?? "正在开启 JIT…") : "游戏需要它。\(offered == .builtIn ? "StikJIT" : offered.title) 可将其开启。")
                             .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -59,7 +59,7 @@ struct JITCard: View {
                         if offered == .builtIn, HuskBuiltInJIT.isAvailable { jit.method = .builtIn }
                         jit.enable()
                     } label: {
-                        Text("Turn On")
+                        Text("开启")
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 14)
@@ -80,24 +80,24 @@ struct JITCard: View {
     private var explanation: String {
         switch offered {
         case .trollStore:
-            return "TrollStore can turn JIT on for Husk: it opens Husk and enables it, with no computer. "
-                 + "In TrollStore's Settings, URL Scheme must be on."
+            return "TrollStore 可以为 Husk 开启 JIT：它会打开 Husk 并启用 JIT，无需电脑。"
+                 + "TrollStore 的设置中必须打开 URL Scheme。"
         case .jailbreak:
-            return "On a jailbroken device JIT is a setting. In Dopamine, turn on Allow JIT in Apps, then open Husk again."
+            return "在已越狱的设备上，JIT 是一项设置。请在 Dopamine 中打开“在应用中允许 JIT”，然后重新打开 Husk。"
         case .stikDebug:
-            return "StikDebug is installed, so Husk will open it to turn JIT on."
+            return "StikDebug 已安装，Husk 将打开它来开启 JIT。"
         default:
-            return "StikJIT is built into Husk. You can turn JIT on right here — no computer and no other app. "
-                 + "Games and Android both need it."
+            return "StikJIT 内置于 Husk。你可以直接在这里开启 JIT——无需电脑，也无需其他应用。"
+                 + "游戏和 Android 都需要它。"
         }
     }
 
     private var buttonTitle: String {
         switch offered {
-        case .trollStore: return "Turn On JIT with TrollStore"
-        case .jailbreak: return "How to Allow JIT"
-        case .stikDebug: return "Turn On JIT with StikDebug"
-        default: return HuskBuiltInJIT.isAvailable ? "Turn On JIT with StikJIT" : "Turn On JIT"
+        case .trollStore: return "通过 TrollStore 开启 JIT"
+        case .jailbreak: return "如何允许 JIT"
+        case .stikDebug: return "通过 StikDebug 开启 JIT"
+        default: return HuskBuiltInJIT.isAvailable ? "通过 StikJIT 开启 JIT" : "开启 JIT"
         }
     }
 
@@ -107,8 +107,8 @@ struct JITCard: View {
                 .font(.title2)
                 .foregroundStyle(.green)
             VStack(alignment: .leading, spacing: 2) {
-                Text("JIT is on").font(.headline)
-                Text("Games and Android can run.").font(.subheadline).foregroundStyle(.secondary)
+                Text("JIT 已开启").font(.headline)
+                Text("游戏和 Android 可以运行了。").font(.subheadline).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }
@@ -125,7 +125,7 @@ struct JITCard: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(offered == .builtIn ? "StikJIT" : offered.title).font(.title3.weight(.semibold))
-                    Text("Turn on JIT").font(.subheadline).foregroundStyle(.secondary)
+                    Text("开启 JIT").font(.subheadline).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -141,7 +141,7 @@ struct JITCard: View {
             if jit.busy {
                 HStack(spacing: 10) {
                     ProgressView()
-                    Text(jit.status ?? "Turning on JIT…").font(.subheadline).foregroundStyle(.secondary)
+                    Text(jit.status ?? "正在开启 JIT…").font(.subheadline).foregroundStyle(.secondary)
                 }
             } else {
                 Button {
@@ -165,7 +165,7 @@ struct JITCard: View {
             }
 
             Button { jit.showSetup = true } label: {
-                Text("First time? See the setup, or use StikDebug or TrollStore instead")
+                Text("初次使用？查看设置指南，或改用 StikDebug 或 TrollStore")
                     .font(.footnote)
             }
         }

@@ -76,8 +76,8 @@ final class MassTest: ObservableObject {
     // MARK: - Starting and stopping
 
     func start() {
-        guard let files = Self.apks(), !files.isEmpty else { status = "Put APKs in the DeveloperTesting folder first."; return }
-        guard !ranThisProcess, husk_native_loaded_apk() == nil else { status = "Close Husk and open it again to start: a game was already loaded in this run."; return }
+        guard let files = Self.apks(), !files.isEmpty else { status = "请先将 APK 放入 DeveloperTesting 文件夹。"; return }
+        guard !ranThisProcess, husk_native_loaded_apk() == nil else { status = "请关闭 Husk 后重新打开再开始：本次运行中已加载了一个游戏。"; return }
         ranThisProcess = true
         state = State(queue: files, index: 0, results: [], appIDs: [:], launched: false, startedAt: Date())
         save()
@@ -100,15 +100,15 @@ final class MassTest: ObservableObject {
         if s.launched {
             // Played in the last run and never written down: Husk did not survive it.
             let file = s.queue[s.index]
-            var outcome = "Husk closed without a record (iOS memory limit, or swiped away)"
+            var outcome = "Husk 关闭且没有记录（iOS 内存限制，或被手动划掉）"
             var diagnosis = ""
             var lines = Self.tail(of: CrashReport.previousLogURL, 80)
             if let r = crash.pending {
-                outcome = "Husk crashed: \(r.cause.title)"
+                outcome = "Husk 崩溃：\(r.cause.title)"
                 diagnosis = r.cause.detail
                 if !r.excerpt.isEmpty { lines = r.excerpt }
             }
-            lines += ["--- native log ---"] + Self.tail(of: Self.docs.appendingPathComponent("husk-native-prev.log"), 120)
+            lines += ["--- 原生日志 ---"] + Self.tail(of: Self.docs.appendingPathComponent("husk-native-prev.log"), 120)
             let app = s.appIDs[file].flatMap { id in TranslationLayerStore.shared.apps.first { $0.id == id } }
             s.results.append(Result(file: file, label: app?.label ?? file, package: app?.packageName ?? "", engine: Self.engineName(app),
                                     outcome: outcome, frames: 0, seconds: 0, diagnosis: diagnosis, log: lines))
@@ -126,7 +126,7 @@ final class MassTest: ObservableObject {
     private func runCurrent() {
         guard var s = state, s.index < s.queue.count else { writeReport(); shareResults = true; return }
         let file = s.queue[s.index]
-        status = "Testing \(s.index + 1) of \(s.queue.count): \(file)"
+        status = "正在测试第 \(s.index + 1) 个（共 \(s.queue.count) 个）：\(file)"
         HuskLog.log("masstest", status)
         Task {
             // Taken into the library once; a later launch for the same APK (after a crash) finds it there.
@@ -135,7 +135,7 @@ final class MassTest: ObservableObject {
                 let urls = Self.files(of: file)
                 id = await Task.detached(priority: .userInitiated) { TranslationLayerStore.importCopy(urls) }.value
             }
-            guard let appID = id else { record(file: file, app: nil, outcome: "Could not be imported (not an APK Husk can read)", frames: 0, seconds: 0); return }
+            guard let appID = id else { record(file: file, app: nil, outcome: "无法导入（不是 Husk 能读取的 APK）", frames: 0, seconds: 0); return }
             s.appIDs[file] = appID
             state = s
             save()
@@ -144,10 +144,10 @@ final class MassTest: ObservableObject {
             while !Launcher.jitOn { try? await Task.sleep(nanoseconds: 500_000_000) }
             try? await Task.sleep(nanoseconds: UInt64(Self.settleSeconds * 1e9))
             guard let app = TranslationLayerStore.shared.apps.first(where: { $0.id == appID }) else {
-                record(file: file, app: nil, outcome: "Imported, but not in the library", frames: 0, seconds: 0); return
+                record(file: file, app: nil, outcome: "已导入，但未出现在资料库中", frames: 0, seconds: 0); return
             }
             if let d = AppDiagnosis.preflight(app), d.blocksLaunch {
-                record(file: file, app: app, outcome: "Not started: \(d.title)", frames: 0, seconds: 0, diagnosis: d.detail); return
+                record(file: file, app: app, outcome: "未启动：\(d.title)", frames: 0, seconds: 0, diagnosis: d.detail); return
             }
             var st = state!
             st.launched = true
@@ -175,20 +175,20 @@ final class MassTest: ObservableObject {
             if st == Int32(HUSK_UNITY_FAILED) || st == Int32(HUSK_UNITY_ENDED) {
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 let f = husk_unity_frames()
-                let outcome = st == Int32(HUSK_UNITY_FAILED) ? "Could not start"
-                            : f > 30 ? "Started, then stopped" : "Crashed at start"
+                let outcome = st == Int32(HUSK_UNITY_FAILED) ? "无法启动"
+                            : f > 30 ? "启动后停止" : "启动时崩溃"
                 record(file: file, app: app, outcome: outcome, frames: f, seconds: ran)
                 return
             }
             if startedAt != nil, ran >= Self.watchSeconds {
                 let outcome = st == Int32(HUSK_UNITY_RUNNING)
-                    ? (frames >= 60 ? "Runs" : frames > 0 ? "Runs, but drew few frames (\(frames))" : "Runs, but drew nothing")
-                    : st == Int32(HUSK_UNITY_STARTING) ? "Still loading after \(Int(ran)) s" : "Running (no frame count for this kind of app)"
+                    ? (frames >= 60 ? "可运行" : frames > 0 ? "可运行，但渲染帧数很少（\(frames)）" : "可运行，但没有渲染任何画面")
+                    : st == Int32(HUSK_UNITY_STARTING) ? "\(Int(ran)) 秒后仍在加载" : "运行中（此类应用无帧数统计）"
                 record(file: file, app: app, outcome: outcome, frames: frames, seconds: ran)
                 return
             }
             if startedAt == nil, Date().timeIntervalSince(t0) > Self.startTimeout {
-                record(file: file, app: app, outcome: "Never started (\(Int(Self.startTimeout)) s)", frames: 0, seconds: 0)
+                record(file: file, app: app, outcome: "始终未启动（\(Int(Self.startTimeout)) 秒）", frames: 0, seconds: 0)
                 return
             }
         }
@@ -241,14 +241,14 @@ final class MassTest: ObservableObject {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH:mm"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
         let commit = Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "?"
-        var out = "Husk mass test -- build \(build) (\(commit)), \(UIDevice.current.model) iOS \(UIDevice.current.systemVersion)\n"
-        out += "Started \(f.string(from: s.startedAt)); \(s.results.count) of \(s.queue.count) tested\n\n"
+        var out = "Husk 批量测试 -- 版本 \(build) (\(commit))，\(UIDevice.current.model) iOS \(UIDevice.current.systemVersion)\n"
+        out += "开始于 \(f.string(from: s.startedAt))；已测试 \(s.results.count)/\(s.queue.count) 个\n\n"
         for r in s.results { out += "\(r.outcome.padding(toLength: 44, withPad: " ", startingAt: 0))  \(r.file)  [\(r.engine)]\n" }
         for r in s.results {
             out += "\n==================== \(r.file)\n"
-            out += "label: \(r.label)\npackage: \(r.package)\nengine: \(r.engine)\noutcome: \(r.outcome)\nframes: \(r.frames)  watched: \(Int(r.seconds)) s\n"
-            if !r.diagnosis.isEmpty { out += "diagnosis: \(r.diagnosis)\n" }
-            out += "--- log (last lines) ---\n" + r.log.joined(separator: "\n") + "\n"
+            out += "名称: \(r.label)\n包名: \(r.package)\n引擎: \(r.engine)\n结果: \(r.outcome)\n帧数: \(r.frames)  观察时长: \(Int(r.seconds)) 秒\n"
+            if !r.diagnosis.isEmpty { out += "诊断: \(r.diagnosis)\n" }
+            out += "--- 日志（最后几行） ---\n" + r.log.joined(separator: "\n") + "\n"
         }
         try? out.write(to: Self.resultsURL, atomically: true, encoding: .utf8)
     }
@@ -273,30 +273,30 @@ struct MassTestView: View {
         List {
             Section {
                 if let files {
-                    Text(files.isEmpty ? "The DeveloperTesting folder is empty." : "\(files.count) apps in DeveloperTesting.")
+                    Text(files.isEmpty ? "DeveloperTesting 文件夹为空。" : "DeveloperTesting 文件夹中有 \(files.count) 个应用。")
                 } else {
-                    Text("Make a folder named DeveloperTesting in Husk's folder (Files > On My iPhone > Husk) and put the APKs to test in it: an APK each, or a folder per app with its base and split APKs.")
+                    Text("请在 Husk 的文件夹（文件 > 我的 iPhone > Husk）中创建一个名为 DeveloperTesting 的文件夹，并将要测试的 APK 放入其中：可以每个应用一个 APK，也可以每个应用一个文件夹（包含基础 APK 和分包）。")
                         .foregroundStyle(.secondary)
                 }
                 if let s = test.state {
-                    Text(test.active ? "In progress: \(s.results.count) of \(s.queue.count) done." : "Last test: \(s.results.count) of \(s.queue.count) done.")
+                    Text(test.active ? "进行中：已完成 \(s.results.count)/\(s.queue.count) 个。" : "上次测试：已完成 \(s.results.count)/\(s.queue.count) 个。")
                 }
                 if !test.status.isEmpty { Text(test.status).font(.caption).foregroundStyle(.secondary) }
             } footer: {
-                Text("Each app is played once JIT is on, watched for 15 seconds, and written down; then Husk closes. Open Husk again for the next one. At the end the results file is offered to share.")
+                Text("JIT 开启后，每个应用会被运行并观察 15 秒，然后记录结果；接着 Husk 会关闭。重新打开 Husk 继续下一个。结束后会提供结果文件供分享。")
             }
             Section {
                 if test.active {
-                    Button("Stop", role: .destructive) { test.stop() }
+                    Button("停止", role: .destructive) { test.stop() }
                 } else {
-                    Button("Start Mass Test") { test.start() }.disabled((files ?? []).isEmpty)
+                    Button("开始批量测试") { test.start() }.disabled((files ?? []).isEmpty)
                 }
                 if FileManager.default.fileExists(atPath: MassTest.resultsURL.path) {
-                    Button("Share Results") { test.writeReport(); share = true }
+                    Button("分享结果") { test.writeReport(); share = true }
                 }
             }
         }
-        .navigationTitle("Mass Test")
+        .navigationTitle("批量测试")
         .huskForm()
         .sheet(isPresented: $share) { ShareSheet(items: [MassTest.resultsURL]) }
     }

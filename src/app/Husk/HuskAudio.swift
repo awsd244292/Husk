@@ -99,6 +99,6 @@ final class HuskAudio {
 
     /// What the guest has produced and what we had to invent, for the perf line.
     nonisolated var summary: String {
-        "\(husk_audio_frames_in()) frames in, \(husk_audio_underruns()) silent"
+        "已输入 \(husk_audio_frames_in()) 帧，静音补齐 \(husk_audio_underruns()) 帧"
     }
 }

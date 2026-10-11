@@ -15,9 +15,9 @@ final class GameStatusStore: ObservableObject {
 
         var label: String {
             switch self {
-            case .plays: return "Plays"
-            case .crashed: return "Crashed last time"
-            case .failed: return "Did not start"
+            case .plays: return "可正常游玩"
+            case .crashed: return "上次已崩溃"
+            case .failed: return "未能启动"
             }
         }
         var symbol: String {
