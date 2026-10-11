@@ -30,6 +30,9 @@ jobs:
           echo "$(brew --prefix flex)/bin" >> "$GITHUB_PATH"
           # build_gpu_ios.sh calls meson and ninja by their Apple-silicon Homebrew path.
           ls /opt/homebrew/bin/meson /opt/homebrew/bin/ninja
+          # 配对库（Rust）需要 iOS target，否则 cfg-if/libc 会编译失败。
+          rustup target add aarch64-apple-ios
+          rustup target list --installed
 
       # ANGLE 与依赖栈占了大部分构建时间，且只在构建脚本或版本锁变化时才会变，因此缓存。
       - name: Cache dependencies
